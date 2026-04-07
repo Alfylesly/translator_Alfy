@@ -367,6 +367,8 @@ footer a { color: var(--accent); text-decoration: none; }
       <span class="tip-icon">📦</span>
       <div>
         <strong>Bulk Upload:</strong> Select multiple PDF, Word (.docx/.doc), or text files at once. Each file's text will be extracted and translated to Tamil automatically. You can download each translation individually or all at once.
+        <br><br>
+        <strong>⏱ Large files take time:</strong> Free APIs limit how much can be translated at once. A 72 KB resume may take 3–5 minutes — the progress bar will update chunk by chunk. If it fails, click <strong>Retry</strong> and it will continue where it left off.
       </div>
     </div>
 
@@ -443,7 +445,7 @@ footer a { color: var(--accent); text-decoration: none; }
 // ==================== SETUP ====================
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-const API = 'https://api.mymemory.translated.net/get';
+// APIs defined in the API CALL section below
 let historyArr = [];
 let fileQueue = []; // [{id, file, name, size, type, status, extractedText, translatedText, error}]
 let isTranslating = false;
@@ -520,34 +522,116 @@ function showErr(id, msg) {
   el.textContent = '⚠️ ' + msg; el.classList.add('show');
 }
 
-// ==================== API CALL ====================
-async function callAPI(text) {
-  const url = `${API}?q=${encodeURIComponent(text.substring(0, 4500))}&langpair=en|ta`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Network error. Check your internet connection.');
-  const data = await res.json();
-  if (data.responseStatus !== 200) throw new Error('Translation failed. Try again.');
-  return data.responseData.translatedText;
+// ==================== API CALL (with retry + fallback) ====================
+// MyMemory free: ~500 words / request, ~5000 chars/day anonymous
+// Fallback: Lingva Translate (open source Google Translate frontend, no key)
+const MYMEMORY = 'https://api.mymemory.translated.net/get';
+const LINGVA   = 'https://lingva.ml/api/v1/en/ta/';
+
+// Track consecutive MyMemory failures to switch to fallback faster
+let myMemoryFails = 0;
+
+async function callAPI(text, retries = 3) {
+  const safe = text.trim().substring(0, 1500); // stay well under per-request limit
+  if (!safe) return '';
+
+  // Try MyMemory first (unless it has been failing repeatedly)
+  if (myMemoryFails < 3) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const url = `${MYMEMORY}?q=${encodeURIComponent(safe)}&langpair=en|ta`;
+        const res = await fetchWithTimeout(url, 12000);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        // responseStatus 200 = OK, 403/429 = rate limited, 500 = server error
+        if (data.responseStatus === 200 || data.responseStatus === '200') {
+          myMemoryFails = 0; // reset fail counter on success
+          const translated = data.responseData.translatedText;
+          // MyMemory sometimes echoes back English when rate-limited — detect this
+          if (translated && translated !== safe && !translated.startsWith('MYMEMORY')) {
+            return translated;
+          }
+          throw new Error('Rate limited — switching to fallback');
+        }
+        // 429 / 403 = rate limited
+        if ([429, 403, '429', '403'].includes(data.responseStatus)) {
+          throw new Error('Rate limited');
+        }
+        throw new Error('API error: ' + data.responseStatus);
+      } catch (e) {
+        myMemoryFails++;
+        if (attempt < retries - 1) {
+          await sleep(2000 * (attempt + 1)); // exponential back-off: 2s, 4s
+          continue;
+        }
+      }
+    }
+  }
+
+  // ---- Fallback: Lingva Translate (open-source, no key needed) ----
+  try {
+    const url = LINGVA + encodeURIComponent(safe);
+    const res = await fetchWithTimeout(url, 15000);
+    if (!res.ok) throw new Error('Lingva HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.translation) {
+      myMemoryFails = 0; // Lingva worked, give MyMemory another chance later
+      return data.translation;
+    }
+    throw new Error('No translation in Lingva response');
+  } catch (lingvaErr) {
+    // Both APIs failed — throw a user-friendly error
+    throw new Error('Both translation services are temporarily unavailable. Please wait 1 minute and click Retry.');
+  }
 }
 
-async function translateInChunks(text) {
-  const sentences = text.replace(/\r\n/g, '\n').split(/(?<=[.!?\n])\s+/);
+function fetchWithTimeout(url, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
+
+// Split text into small safe chunks (≤ 1200 chars, on sentence boundaries)
+function splitIntoChunks(text, maxLen = 1200) {
+  const cleaned = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  // Split on sentence endings or paragraph breaks
+  const parts = cleaned.split(/(?<=[.!?\n])\s+|(?<=\n\n)/);
   const chunks = [];
   let cur = '';
-  for (const s of sentences) {
-    if ((cur + ' ' + s).length > 4000) {
+  for (const part of parts) {
+    const candidate = cur ? cur + ' ' + part : part;
+    if (candidate.length > maxLen) {
       if (cur.trim()) chunks.push(cur.trim());
-      cur = s;
-    } else { cur = cur ? cur + ' ' + s : s; }
+      // If a single part is too long, hard-split it
+      if (part.length > maxLen) {
+        for (let i = 0; i < part.length; i += maxLen) {
+          chunks.push(part.slice(i, i + maxLen).trim());
+        }
+        cur = '';
+      } else {
+        cur = part;
+      }
+    } else {
+      cur = candidate;
+    }
   }
   if (cur.trim()) chunks.push(cur.trim());
-  if (!chunks.length) chunks.push(text.substring(0, 4000));
+  return chunks.filter(c => c.length > 0);
+}
 
+async function translateInChunks(text, onProgress) {
+  const chunks = splitIntoChunks(text, 1200);
   const results = [];
-  for (const chunk of chunks) {
-    const r = await callAPI(chunk);
+  for (let i = 0; i < chunks.length; i++) {
+    if (onProgress) onProgress(i, chunks.length);
+    const r = await callAPI(chunks[i]);
     results.push(r);
-    await sleep(600);
+    // Polite delay between requests to avoid rate limiting
+    // Longer delay after every 5 chunks to be gentle on free API
+    const delay = (i + 1) % 5 === 0 ? 3000 : 1200;
+    if (i < chunks.length - 1) await sleep(delay);
   }
   return results.join('\n\n');
 }
@@ -672,10 +756,23 @@ function renderQueue() {
 function renderFileItem(f) {
   const icon = { '.pdf': '📕', '.docx': '📘', '.doc': '📗', '.txt': '📄', '.text': '📄' }[f.type] || '📄';
   const sizeStr = f.size < 1024 ? f.size + ' B' : f.size < 1024*1024 ? (f.size/1024).toFixed(1) + ' KB' : (f.size/1024/1024).toFixed(1) + ' MB';
-  const statusLabel = { pending: '', extracting: '⏳ Extracting text...', translating: '🔄 Translating to Tamil...', done: '✅ Translation complete!', error: '❌ ' + f.error }[f.status];
-  const statusClass = f.status;
-  const itemClass = ['processing', 'translating'].includes(f.status) ? 'processing' : f.status === 'done' ? 'done' : f.status === 'error' ? 'error' : '';
-  const progress = f.status === 'done' ? 100 : f.status === 'translating' ? 70 : f.status === 'extracting' ? 30 : 0;
+
+  const statusLabel = {
+    pending:    '',
+    extracting: '⏳ Reading file...',
+    translating:`🔄 Translating to Tamil${f.chunkInfo ? ' — ' + f.chunkInfo : '...'}`,
+    done:       '✅ Translation complete!',
+    error:      '❌ ' + (f.error || 'Unknown error')
+  }[f.status] || '';
+
+  const itemClass = f.status === 'translating' || f.status === 'extracting' ? 'processing'
+                  : f.status === 'done'  ? 'done'
+                  : f.status === 'error' ? 'error' : '';
+
+  // Live progress: extracting=15%, translating uses chunkProgress, done=100%
+  const progress = f.status === 'done'       ? 100
+                 : f.status === 'translating' ? (f.chunkProgress || 5)
+                 : f.status === 'extracting'  ? 15 : 0;
   const progressDone = f.status === 'done' ? 'done' : '';
 
   return `<div class="file-item ${itemClass}" id="item-${f.id}">
@@ -683,7 +780,7 @@ function renderFileItem(f) {
     <div class="file-info">
       <div class="file-name">${escHtml(f.name)}</div>
       <div class="file-meta">${sizeStr} · ${f.type.replace('.','').toUpperCase()}</div>
-      ${statusLabel ? `<div class="file-status ${statusClass}">${statusLabel}</div>` : ''}
+      ${statusLabel ? `<div class="file-status ${f.status}">${statusLabel}</div>` : ''}
       ${progress > 0 ? `<div class="file-progress"><div class="file-progress-fill ${progressDone}" style="width:${progress}%"></div></div>` : ''}
       ${f.status === 'done' && f.translatedText ? `<div class="translation-preview">${escHtml(f.translatedText.substring(0, 300))}${f.translatedText.length > 300 ? '...' : ''}</div>` : ''}
     </div>
@@ -716,31 +813,43 @@ function updateBulkProgress() {
 async function startBulkTranslation() {
   if (isTranslating) return;
   isTranslating = true;
+  myMemoryFails = 0; // reset on each new run
   const btn = document.getElementById('bulkStartBtn');
   btn.disabled = true; btn.textContent = '⏳ Processing...';
 
   const pending = fileQueue.filter(f => f.status === 'pending' || f.status === 'error');
 
   for (const f of pending) {
-    // EXTRACT
-    f.status = 'extracting'; updateFileItem(f.id);
+    // EXTRACT TEXT
+    f.status = 'extracting'; f.chunkInfo = ''; f.error = '';
+    updateFileItem(f.id);
     try {
       f.extractedText = await extractText(f.file);
     } catch (e) {
-      f.status = 'error'; f.error = e.message; updateFileItem(f.id); updateBulkProgress(); continue;
+      f.status = 'error'; f.error = e.message;
+      updateFileItem(f.id); updateBulkProgress(); continue;
     }
 
-    // TRANSLATE
-    f.status = 'translating'; updateFileItem(f.id);
+    // TRANSLATE CHUNK BY CHUNK
+    f.status = 'translating'; f.chunkInfo = 'Starting...';
+    updateFileItem(f.id);
     try {
-      f.translatedText = await translateInChunks(f.extractedText);
-      f.status = 'done';
+      f.translatedText = await translateInChunks(
+        f.extractedText,
+        (chunkIdx, totalChunks) => {
+          f.chunkInfo = `Chunk ${chunkIdx + 1} of ${totalChunks}`;
+          f.chunkProgress = Math.round(((chunkIdx) / totalChunks) * 100);
+          updateFileItem(f.id);
+        }
+      );
+      f.status = 'done'; f.chunkInfo = ''; f.chunkProgress = 100;
     } catch (e) {
-      f.status = 'error'; f.error = 'Translation failed: ' + e.message;
+      f.status = 'error';
+      f.error = e.message;
     }
     updateFileItem(f.id);
     updateBulkProgress();
-    await sleep(400);
+    await sleep(500);
   }
 
   isTranslating = false;
@@ -752,7 +861,10 @@ async function startBulkTranslation() {
 async function retryFile(id) {
   const f = fileQueue.find(f => f.id === id);
   if (!f) return;
-  f.status = 'pending'; f.error = ''; f.extractedText = ''; f.translatedText = '';
+  f.status = 'pending'; f.error = '';
+  f.extractedText = ''; f.translatedText = '';
+  f.chunkInfo = ''; f.chunkProgress = 0;
+  myMemoryFails = 0; // reset API fail counter on manual retry
   updateFileItem(f.id);
   if (!isTranslating) startBulkTranslation();
 }
