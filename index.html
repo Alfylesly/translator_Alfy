@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ஆங்கிலம் → தமிழ் | English to Tamil Translator</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Tamil:wght@400;700&family=Literata:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FDF8F0;
+    --surface: #FFFFFF;
+    --surface2: #F5EFE2;
+    --accent: #8B3A0F;
+    --accent2: #C5601A;
+    --text: #1A0F00;
+    --muted: #6B5340;
+    --border: #D4B896;
+    --green: #1B6B35;
+    --green-bg: #EAF6EE;
+    --red: #8B1A1A;
+    --red-bg: #FDEAEA;
+    --shadow: 0 2px 16px rgba(139,58,15,0.10);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Literata', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 20px;
+    line-height: 1.7;
+  }
+
+  header {
+    background: var(--accent);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    box-shadow: 0 3px 12px rgba(139,58,15,0.3);
+  }
+
+  header .logo {
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  header p {
+    font-size: 1rem;
+    opacity: 0.85;
+  }
+
+  .main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .info-bar {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 1rem;
+    color: var(--muted);
+  }
+
+  .info-bar strong { color: var(--accent); }
+
+  .font-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .font-controls span {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+
+  .font-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    transition: all 0.15s;
+  }
+
+  .font-btn:hover, .font-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    padding: 0.7rem 1.4rem;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 1.05rem;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+
+  .tab:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  textarea {
+    width: 100%;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    font-size: 1.15rem;
+    font-family: 'Literata', Georgia, serif;
+    color: var(--text);
+    background: var(--bg);
+    resize: vertical;
+    line-height: 1.7;
+    transition: border-color 0.2s;
+    outline: none;
+    min-height: 160px;
+  }
+
+  textarea:focus { border-color: var(--accent2); background: #FFFCF7; }
+
+  .char-count {
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+
+  .char-count.warn { color: var(--red); font-weight: 600; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 2rem;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.18s;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { background: var(--border); cursor: not-allowed; }
+
+  .btn-outline {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--muted);
+  }
+
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.2rem;
+  }
+
+  .result-box {
+    background: var(--green-bg);
+    border: 2px solid #A8D8B4;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    display: none;
+  }
+
+  .result-box.show { display: block; }
+
+  .result-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--green);
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .result-text {
+    font-family: 'Noto Serif Tamil', 'Literata', serif;
+    font-size: 1.3rem;
+    line-height: 1.9;
+    color: var(--text);
+    word-break: break-word;
+  }
+
+  .error-box {
+    background: var(--red-bg);
+    border: 2px solid #F0AAAA;
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    margin-top: 1.2rem;
+    color: var(--red);
+    font-size: 1rem;
+    display: none;
+  }
+
+  .error-box.show { display: block; }
+
+  .spinner {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  .spinner.show { display: flex; }
+
+  .spin-circle {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .copy-done {
+    display: inline-block;
+    background: var(--green);
+    color: white;
+    font-size: 0.85rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 6px;
+    margin-left: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .copy-done.show { opacity: 1; }
+
+  .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .doc-card {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .doc-card:hover { border-color: var(--accent2); box-shadow: var(--shadow); }
+  .doc-card.selected { border-color: var(--accent); background: #FFF5EC; }
+
+  .doc-card h3 {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .doc-card p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .doc-preview {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .doc-preview h2 {
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 0.7rem;
+  }
+
+  .doc-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .doc-section h4 {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.85rem;
+  }
+
+  .doc-section .en-text {
+    font-size: 1.05rem;
+    color: var(--text);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .doc-section .ta-text {
+    font-family: 'Noto Serif Tamil', serif;
+    font-size: 1.2rem;
+    color: #1B6B35;
+    background: var(--green-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #A8D8B4;
+    min-height: 2.5rem;
+  }
+
+  .file-upload-area {
+    border: 3px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface2);
+    margin-bottom: 1.5rem;
+  }
+
+  .file-upload-area:hover, .file-upload-area.drag { border-color: var(--accent2); background: #FFF5EC; }
+  .file-upload-area p { font-size: 1.05rem; color: var(--muted); margin-top: 0.5rem; }
+  .file-upload-area .icon { font-size: 3rem; }
+
+  input[type="file"] { display: none; }
+
+  .history-list { list-style: none; }
+
+  .history-item {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.15s;
+  }
+
+  .history-item:hover { box-shadow: var(--shadow); }
+
+  .history-item .en { font-size: 1rem; color: var(--muted); margin-bottom: 0.4rem; }
+
+  .history-item .ta {
+    font-family: 'Noto Serif Tamil', serif;
+    font-size: 1.2rem;
+    color: var(--text);
+  }
+
+  .history-item .meta { font-size: 0.85rem; color: var(--border); margin-top: 0.4rem; }
+
+  .tip-box {
+    background: #FFF5EC;
+    border: 2px solid #E8C48A;
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+    color: #7A4A10;
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+
+  .tip-box .tip-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+  footer {
+    background: var(--surface2);
+    border-top: 1.5px solid var(--border);
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 3rem;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    header { padding: 1rem; }
+    header h1 { font-size: 1.2rem; }
+    .main { padding: 1.2rem 0.8rem 3rem; }
+    .card { padding: 1.2rem; }
+    .btn { font-size: 1rem; padding: 0.75rem 1.4rem; }
+    .result-text { font-size: 1.15rem; }
+    textarea { font-size: 1.05rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌺</div>
+  <div>
+    <h1>ஆங்கிலம் → தமிழ் மொழிபெயர்ப்பு</h1>
+    <p>English to Tamil Translator — For Elders & Families</p>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="info-bar">
+    <span>🆓 <strong>100% Free</strong> — No account needed</span>
+    <span>🔒 <strong>Private</strong> — No data stored</span>
+    <span>🌐 <strong>Powered by MyMemory</strong> (Open Source API)</span>
+  </div>
+
+  <div class="font-controls">
+    <span>📝 Text Size:</span>
+    <button class="font-btn" onclick="setFontSize(18)">A</button>
+    <button class="font-btn active" onclick="setFontSize(20)">A+</button>
+    <button class="font-btn" onclick="setFontSize(24)">A++</button>
+    <button class="font-btn" onclick="setFontSize(28)">A+++</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('translate')">✏️ Translate Text</button>
+    <button class="tab" onclick="showTab('documents')">📋 Common Documents</button>
+    <button class="tab" onclick="showTab('upload')">📄 Upload File</button>
+    <button class="tab" onclick="showTab('history')">🕘 History</button>
+  </div>
+
+  <!-- TAB 1: TRANSLATE TEXT -->
+  <div class="panel active" id="panel-translate">
+
+    <div class="tip-box">
+      <span class="tip-icon">💡</span>
+      <div>
+        <strong>Tip for Elders:</strong> Type or paste your English text in the box below, then press the big orange <strong>Translate</strong> button. The Tamil translation will appear below!
+      </div>
+    </div>
+
+    <div class="card">
+      <label for="inputText">🇬🇧 English Text (type here):</label>
+      <textarea id="inputText" rows="7" maxlength="4500"
+        placeholder="Type or paste your English text here...&#10;&#10;Example: The doctor said to take one tablet in the morning and one at night after food."
+        oninput="updateCharCount()"></textarea>
+      <div class="char-count" id="charCount">0 / 4500 characters</div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="translateText()" id="translateBtn">
+          🔁 Translate to Tamil
+        </button>
+        <button class="btn btn-outline" onclick="clearAll()">🗑️ Clear</button>
+        <button class="btn btn-outline" onclick="speakEnglish()">🔊 Hear English</button>
+      </div>
+
+      <div class="spinner" id="spinner">
+        <div class="spin-circle"></div>
+        <span>Translating... தமிழாக்கம் நடைபெறுகிறது...</span>
+      </div>
+
+      <div class="error-box" id="errorBox"></div>
+
+      <div class="result-box" id="resultBox">
+        <div class="result-label">
+          🇮🇳 Tamil Translation — தமிழ் மொழிபெயர்ப்பு
+          <span class="copy-done" id="copyDone">✓ Copied!</span>
+        </div>
+        <div class="result-text" id="resultText"></div>
+        <div class="btn-row" style="margin-top:1rem;">
+          <button class="btn btn-outline" onclick="copyResult()">📋 Copy Tamil Text</button>
+          <button class="btn btn-outline" onclick="speakTamil()">🔊 Hear Tamil</button>
+          <button class="btn btn-outline" onclick="saveToHistory()">💾 Save to History</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: COMMON DOCUMENTS -->
+  <div class="panel" id="panel-documents">
+
+    <div class="tip-box">
+      <span class="tip-icon">📋</span>
+      <div>
+        Select a common document type below. Each section will be translated automatically into Tamil. Great for medical forms, government letters, and bank documents.
+      </div>
+    </div>
+
+    <div class="doc-grid">
+      <div class="doc-card" onclick="selectDoc('medical')" id="doc-medical">
+        <h3>🏥 Medical Instructions</h3>
+        <p>Doctor's prescription, dosage, hospital appointment notices</p>
+      </div>
+      <div class="doc-card" onclick="selectDoc('bank')" id="doc-bank">
+        <h3>🏦 Bank Notices</h3>
+        <p>Account statements, KYC updates, ATM & internet banking</p>
+      </div>
+      <div class="doc-card" onclick="selectDoc('govt')" id="doc-govt">
+        <h3>🏛️ Government Letters</h3>
+        <p>Ration card, Aadhaar, pension, electricity bill notices</p>
+      </div>
+      <div class="doc-card" onclick="selectDoc('general')" id="doc-general">
+        <h3>📬 General Letters</h3>
+        <p>Common phrases, greetings, everyday communication</p>
+      </div>
+    </div>
+
+    <div id="docPreviewArea"></div>
+
+    <div id="docTranslateBtn" style="display:none; margin-top:1rem;">
+      <button class="btn btn-primary" onclick="translateDocument()">
+        🔁 Translate All Sections to Tamil
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB 3: UPLOAD FILE -->
+  <div class="panel" id="panel-upload">
+
+    <div class="tip-box">
+      <span class="tip-icon">📄</span>
+      <div>
+        Upload a plain text file (.txt) from your computer. The content will be loaded into the translator automatically. PDF text can be copied and pasted in the Translate tab.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="file-upload-area" onclick="document.getElementById('fileInput').click()"
+           id="dropZone"
+           ondragover="event.preventDefault(); this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="handleDrop(event)">
+        <div class="icon">📂</div>
+        <p><strong>Click here to choose a .txt file</strong></p>
+        <p>or drag and drop a text file here</p>
+        <p style="font-size:0.85rem; margin-top:0.5rem; color:#A08060;">Supports: .txt files</p>
+      </div>
+      <input type="file" id="fileInput" accept=".txt,.text" onchange="handleFile(event)">
+
+      <div id="fileContent" style="display:none;">
+        <label>📝 File Contents (you can edit below):</label>
+        <textarea id="fileTextArea" rows="10" style="margin-top:0.5rem;"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="translateFileContent()">🔁 Translate to Tamil</button>
+          <button class="btn btn-outline" onclick="clearFile()">🗑️ Clear</button>
+        </div>
+        <div class="spinner" id="fileSpinner">
+          <div class="spin-circle"></div>
+          <span>Translating file...</span>
+        </div>
+        <div class="error-box" id="fileError"></div>
+        <div class="result-box" id="fileResult" style="margin-top:1.5rem;">
+          <div class="result-label">🇮🇳 Tamil Translation</div>
+          <div class="result-text" id="fileResultText"></div>
+          <div class="btn-row" style="margin-top:1rem;">
+            <button class="btn btn-outline" onclick="copyFileResult()">📋 Copy</button>
+            <button class="btn btn-outline" onclick="downloadResult()">⬇️ Download Tamil .txt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: HISTORY -->
+  <div class="panel" id="panel-history">
+    <div class="tip-box">
+      <span class="tip-icon">🕘</span>
+      <div>
+        Your recent translations are saved here automatically. They are stored only on this device (browser memory) and are deleted when you close the browser.
+      </div>
+    </div>
+
+    <div id="historyContainer">
+      <p style="color:var(--muted); font-size:1.1rem; text-align:center; padding:2rem;">
+        No translations yet. Go to the "Translate Text" tab and save some! 😊
+      </p>
+    </div>
+
+    <button class="btn btn-outline" onclick="clearHistory()" style="margin-top:1rem;" id="clearHistBtn" style="display:none;">
+      🗑️ Clear All History
+    </button>
+  </div>
+
+</div><!-- end main -->
+
+<footer>
+  <p>Powered by <a href="https://mymemory.translated.net/" target="_blank">MyMemory Free Translation API</a> — Open Source, No API key required</p>
+  <p style="margin-top:0.4rem;">Made with ❤️ for Tamil elders · Free forever · <a href="https://github.com/LibreTranslate/LibreTranslate" target="_blank">Open Source</a></p>
+</footer>
+
+<script>
+const API = 'https://api.mymemory.translated.net/get';
+let history = [];
+let currentDocType = null;
+let currentDocData = null;
+
+const DOCS = {
+  medical: {
+    title: '🏥 Medical Instructions',
+    sections: [
+      { key: 'dosage', label: 'Dosage Instructions', en: 'Take one tablet twice a day after meals. Do not take on an empty stomach. If you feel dizzy, stop the medication and contact your doctor immediately.' },
+      { key: 'appt', label: 'Appointment Notice', en: 'Your appointment has been scheduled for Monday at 10:30 AM at the General Hospital, 2nd floor, Room 204. Please bring your previous medical records and Aadhaar card.' },
+      { key: 'diet', label: 'Diet & Precautions', en: 'Avoid spicy and oily food. Drink at least 8 glasses of water every day. Do not consume alcohol or tobacco. Take rest and avoid heavy physical activity for one week.' }
+    ]
+  },
+  bank: {
+    title: '🏦 Bank Notices',
+    sections: [
+      { key: 'kyc', label: 'KYC Update Notice', en: 'Dear customer, your KYC documents need to be updated before the 30th of this month. Please visit your nearest branch with your Aadhaar card, PAN card, and a passport size photograph.' },
+      { key: 'atm', label: 'ATM & Safety Tips', en: 'Never share your ATM PIN or OTP with anyone, including bank employees. If you receive a suspicious call asking for your account details, please hang up and call our helpline at 1800-XXX-XXXX.' },
+      { key: 'stmt', label: 'Account Statement', en: 'Your monthly account statement is ready. Your current balance is as shown in the attached passbook. For any queries, please visit your home branch or call our 24/7 customer care.' }
+    ]
+  },
+  govt: {
+    title: '🏛️ Government Letters',
+    sections: [
+      { key: 'ration', label: 'Ration Card Notice', en: 'Your ration card is due for renewal. Please visit the nearest Taluk office with your original Aadhaar card, recent electricity bill, and two passport size photographs within 30 days.' },
+      { key: 'pension', label: 'Pension Notice', en: 'Your monthly pension of Rs. 1000 has been credited to your registered bank account. To continue receiving benefits, please complete your annual life certificate verification at your nearest post office.' },
+      { key: 'elect', label: 'Electricity Bill', en: 'This is your electricity bill for the month. The total amount due is shown on the bill. Please pay before the due date to avoid late fees and disconnection of supply.' }
+    ]
+  },
+  general: {
+    title: '📬 General & Everyday',
+    sections: [
+      { key: 'greet', label: 'Greetings', en: 'Good morning. How are you? I hope you and your family are doing well. Please take care of your health and eat nutritious food regularly.' },
+      { key: 'emerg', label: 'Emergency Message', en: 'This is very important. Please call the doctor immediately. There is an emergency at home. We are going to the hospital. Do not worry, everything will be fine.' },
+      { key: 'help', label: 'Asking for Help', en: 'Excuse me, could you please help me? I am unable to read this document. Can you explain what is written here? I would be very grateful for your assistance.' }
+    ]
+  }
+};
+
+async function translateText() {
+  const text = document.getElementById('inputText').value.trim();
+  if (!text) { showError('errorBox', 'Please type some English text first!'); return; }
+
+  setTranslating(true);
+  hideAll();
+
+  try {
+    const result = await callAPI(text);
+    document.getElementById('resultText').textContent = result;
+    document.getElementById('resultBox').classList.add('show');
+  } catch(e) {
+    showError('errorBox', e.message);
+  } finally {
+    setTranslating(false);
+  }
+}
+
+async function callAPI(text) {
+  const url = `${API}?q=${encodeURIComponent(text)}&langpair=en|ta`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Network error. Please check your internet connection.');
+  const data = await res.json();
+  if (data.responseStatus !== 200) throw new Error('Translation failed. Please try again in a moment.');
+  return data.responseData.translatedText;
+}
+
+function setTranslating(on) {
+  document.getElementById('spinner').classList.toggle('show', on);
+  document.getElementById('translateBtn').disabled = on;
+}
+
+function hideAll() {
+  document.getElementById('resultBox').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠️ ' + msg;
+  el.classList.add('show');
+}
+
+function updateCharCount() {
+  const len = document.getElementById('inputText').value.length;
+  const el = document.getElementById('charCount');
+  el.textContent = len + ' / 4500 characters';
+  el.classList.toggle('warn', len > 4000);
+}
+
+function clearAll() {
+  document.getElementById('inputText').value = '';
+  updateCharCount();
+  hideAll();
+}
+
+function copyResult() {
+  const text = document.getElementById('resultText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById('copyDone');
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+  });
+}
+
+function speakEnglish() {
+  const text = document.getElementById('inputText').value.trim();
+  if (!text) return;
+  speak(text, 'en-US');
+}
+
+function speakTamil() {
+  const text = document.getElementById('resultText').textContent;
+  if (!text) return;
+  speak(text, 'ta-IN');
+}
+
+function speak(text, lang) {
+  if (!window.speechSynthesis) { alert('Text-to-speech is not supported in your browser.'); return; }
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = 0.85;
+  window.speechSynthesis.speak(utter);
+}
+
+function saveToHistory() {
+  const en = document.getElementById('inputText').value.trim();
+  const ta = document.getElementById('resultText').textContent;
+  if (!en || !ta) return;
+  history.unshift({ en, ta, time: new Date().toLocaleString() });
+  if (history.length > 30) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const c = document.getElementById('historyContainer');
+  if (!history.length) {
+    c.innerHTML = '<p style="color:var(--muted); font-size:1.1rem; text-align:center; padding:2rem;">No translations yet. Go to the "Translate Text" tab and save some! 😊</p>';
+    return;
+  }
+  c.innerHTML = '<ul class="history-list">' + history.map(h => `
+    <li class="history-item">
+      <div class="en">🇬🇧 ${escHtml(h.en.substring(0,120))}${h.en.length>120?'...':''}</div>
+      <div class="ta">🇮🇳 ${escHtml(h.ta.substring(0,200))}${h.ta.length>200?'...':''}</div>
+      <div class="meta">Saved: ${h.time}</div>
+    </li>`).join('') + '</ul>';
+  document.getElementById('clearHistBtn').style.display = 'inline-flex';
+}
+
+function clearHistory() {
+  if (confirm('Clear all saved translations?')) {
+    history = [];
+    renderHistory();
+  }
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function selectDoc(type) {
+  currentDocType = type;
+  document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('doc-' + type).classList.add('selected');
+
+  const doc = DOCS[type];
+  currentDocData = doc;
+
+  let html = `<div class="doc-preview"><h2>${doc.title}</h2>`;
+  doc.sections.forEach(s => {
+    html += `<div class="doc-section">
+      <h4>${s.label}</h4>
+      <div class="en-text">${escHtml(s.en)}</div>
+      <div class="ta-text" id="ta-${s.key}">— Not yet translated —</div>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('docPreviewArea').innerHTML = html;
+  document.getElementById('docTranslateBtn').style.display = 'block';
+}
+
+async function translateDocument() {
+  if (!currentDocData) return;
+  const btn = document.querySelector('#docTranslateBtn button');
+  btn.disabled = true;
+  btn.textContent = '⏳ Translating...';
+
+  for (const s of currentDocData.sections) {
+    const el = document.getElementById('ta-' + s.key);
+    el.textContent = '⏳ Translating...';
+    try {
+      const result = await callAPI(s.en);
+      el.textContent = result;
+      el.style.color = 'var(--green)';
+    } catch(e) {
+      el.textContent = '⚠️ Translation failed. Please try again.';
+    }
+    await new Promise(r => setTimeout(r, 600));
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✅ All Sections Translated!';
+}
+
+function handleFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  readFile(file);
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  const file = event.dataTransfer.files[0];
+  if (file) readFile(file);
+}
+
+function readFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('fileTextArea').value = e.target.result;
+    document.getElementById('fileContent').style.display = 'block';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function translateFileContent() {
+  const text = document.getElementById('fileTextArea').value.trim();
+  if (!text) return;
+
+  document.getElementById('fileSpinner').classList.add('show');
+  document.getElementById('fileError').classList.remove('show');
+  document.getElementById('fileResult').classList.remove('show');
+
+  const chunks = chunkText(text, 4000);
+  let translated = [];
+
+  try {
+    for (const chunk of chunks) {
+      const result = await callAPI(chunk);
+      translated.push(result);
+      await new Promise(r => setTimeout(r, 500));
+    }
+    document.getElementById('fileResultText').textContent = translated.join('\n\n');
+    document.getElementById('fileResult').classList.add('show');
+  } catch(e) {
+    showError('fileError', e.message);
+  } finally {
+    document.getElementById('fileSpinner').classList.remove('show');
+  }
+}
+
+function chunkText(text, size) {
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const chunks = [];
+  let current = '';
+  for (const s of sentences) {
+    if ((current + s).length > size) {
+      if (current) chunks.push(current.trim());
+      current = s;
+    } else {
+      current += ' ' + s;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  return chunks.length ? chunks : [text.substring(0, size)];
+}
+
+function clearFile() {
+  document.getElementById('fileTextArea').value = '';
+  document.getElementById('fileContent').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+function copyFileResult() {
+  const text = document.getElementById('fileResultText').textContent;
+  navigator.clipboard.writeText(text);
+}
+
+function downloadResult() {
+  const text = document.getElementById('fileResultText').textContent;
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tamil-translation.txt';
+  a.click();
+}
+
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+function setFontSize(size) {
+  document.body.style.fontSize = size + 'px';
+  document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
