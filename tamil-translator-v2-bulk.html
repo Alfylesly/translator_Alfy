@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ஆங்கிலம் → தமிழ் | English to Tamil Translator</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Tamil:wght@400;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- PDF.js for PDF reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Mammoth.js for .docx reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+<style>
+:root {
+  --bg: #FDF8F0;
+  --surface: #FFFFFF;
+  --surface2: #F5EFE2;
+  --accent: #8B3A0F;
+  --accent2: #C5601A;
+  --text: #1A0F00;
+  --muted: #6B5340;
+  --border: #D4B896;
+  --green: #1B6B35;
+  --green-bg: #EAF6EE;
+  --red: #8B1A1A;
+  --red-bg: #FDEAEA;
+  --blue: #1A4A8B;
+  --blue-bg: #E8F0FB;
+  --shadow: 0 2px 16px rgba(139,58,15,0.10);
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Lora', Georgia, serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+/* HEADER */
+header {
+  background: var(--accent);
+  color: white;
+  padding: 1.2rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 3px 12px rgba(139,58,15,0.3);
+}
+header .logo { font-size: 2.2rem; }
+header h1 { font-size: 1.35rem; font-weight: 600; line-height: 1.3; }
+header p { font-size: 0.9rem; opacity: 0.85; }
+
+/* MAIN */
+.main { max-width: 1020px; margin: 0 auto; padding: 1.8rem 1.2rem 4rem; }
+
+/* FONT SIZE */
+.font-controls { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.font-controls span { font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+.font-btn {
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: 8px; padding: 0.3rem 0.9rem;
+  cursor: pointer; font-family: inherit; font-weight: 600;
+  color: var(--accent); transition: all 0.15s;
+}
+.font-btn:hover, .font-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* TABS */
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 1.8rem; flex-wrap: wrap; }
+.tab {
+  padding: 0.6rem 1.2rem; border-radius: 10px;
+  border: 2px solid var(--border); background: var(--surface);
+  color: var(--muted); font-size: 0.95rem; font-family: inherit;
+  cursor: pointer; font-weight: 600; transition: all 0.15s;
+}
+.tab:hover { border-color: var(--accent2); color: var(--accent2); }
+.tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 1.6rem;
+  box-shadow: var(--shadow); margin-bottom: 1.5rem;
+}
+label { display: block; font-weight: 600; font-size: 0.95rem; color: var(--accent); margin-bottom: 0.4rem; }
+textarea {
+  width: 100%; border: 2px solid var(--border); border-radius: 10px;
+  padding: 0.9rem 1rem; font-size: 1.05rem;
+  font-family: 'Lora', Georgia, serif; color: var(--text);
+  background: var(--bg); resize: vertical; line-height: 1.7;
+  transition: border-color 0.2s; outline: none; min-height: 140px;
+}
+textarea:focus { border-color: var(--accent2); background: #FFFCF7; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1.6rem; border-radius: 10px; font-family: inherit;
+  font-size: 1rem; font-weight: 600; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.18s;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-primary:disabled { background: var(--border); cursor: not-allowed; }
+.btn-outline { background: var(--surface); border-color: var(--border); color: var(--muted); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-green { background: var(--green); color: white; border-color: var(--green); }
+.btn-green:hover { background: #145228; }
+.btn-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
+
+/* STATUS BOXES */
+.result-box { background: var(--green-bg); border: 2px solid #A8D8B4; border-radius: var(--radius); padding: 1.3rem; margin-top: 1.3rem; display: none; }
+.result-box.show { display: block; }
+.result-label { font-weight: 600; font-size: 0.9rem; color: var(--green); margin-bottom: 0.6rem; }
+.result-text { font-family: 'Noto Serif Tamil', serif; font-size: 1.2rem; line-height: 1.9; color: var(--text); word-break: break-word; }
+.error-box { background: var(--red-bg); border: 2px solid #F0AAAA; border-radius: var(--radius); padding: 1rem 1.3rem; margin-top: 1rem; color: var(--red); font-size: 0.9rem; display: none; }
+.error-box.show { display: block; }
+.info-box { background: var(--blue-bg); border: 2px solid #9DB8E8; border-radius: var(--radius); padding: 0.9rem 1.2rem; margin-bottom: 1rem; color: var(--blue); font-size: 0.9rem; display: flex; gap: 0.6rem; align-items: flex-start; }
+.spinner { display: none; align-items: center; gap: 0.7rem; margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+.spinner.show { display: flex; }
+.spin-circle { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* TIP BOX */
+.tip-box {
+  background: #FFF5EC; border: 2px solid #E8C48A;
+  border-radius: var(--radius); padding: 1rem 1.3rem;
+  margin-bottom: 1.5rem; font-size: 0.9rem; color: #7A4A10;
+  display: flex; gap: 0.7rem; align-items: flex-start;
+}
+.tip-box .tip-icon { font-size: 1.3rem; flex-shrink: 0; }
+
+/* ===================== BULK UPLOAD ===================== */
+.drop-zone {
+  border: 3px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface2);
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag { border-color: var(--accent2); background: #FFF5EC; }
+.drop-zone .dz-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+.drop-zone h3 { font-size: 1.1rem; color: var(--accent); margin-bottom: 0.3rem; }
+.drop-zone p { font-size: 0.9rem; color: var(--muted); }
+.drop-zone .type-badges { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.8rem; flex-wrap: wrap; }
+.type-badge {
+  padding: 0.2rem 0.8rem; border-radius: 6px;
+  font-size: 0.8rem; font-weight: 600; font-family: monospace;
+}
+.badge-pdf { background: #FDE8E8; color: #8B1A1A; border: 1px solid #F0AAAA; }
+.badge-docx { background: #E8EEF8; color: #1A4A8B; border: 1px solid #9DB8E8; }
+.badge-doc { background: #E8F4FF; color: #1A5A8B; border: 1px solid #9DC8E8; }
+.badge-txt { background: #EAF6EE; color: #1B6B35; border: 1px solid #A8D8B4; }
+
+/* FILE QUEUE */
+.file-queue { margin-bottom: 1.5rem; }
+.file-queue-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+.file-queue-header h3 { font-size: 1rem; color: var(--accent); font-weight: 600; }
+.queue-stats { font-size: 0.85rem; color: var(--muted); }
+
+.file-item {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 0.9rem 1.1rem;
+  margin-bottom: 0.6rem; display: flex;
+  align-items: flex-start; gap: 0.8rem;
+  transition: all 0.2s;
+}
+.file-item.processing { border-color: var(--accent2); background: #FFF8F2; }
+.file-item.done { border-color: #A8D8B4; background: var(--green-bg); }
+.file-item.error { border-color: #F0AAAA; background: var(--red-bg); }
+
+.file-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 0.1rem; }
+.file-info { flex: 1; min-width: 0; }
+.file-name { font-size: 0.95rem; font-weight: 600; color: var(--text); word-break: break-all; }
+.file-meta { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+.file-status { font-size: 0.82rem; margin-top: 0.3rem; font-weight: 600; }
+.file-status.extracting { color: var(--accent2); }
+.file-status.translating { color: var(--blue); }
+.file-status.done { color: var(--green); }
+.file-status.error { color: var(--red); }
+
+.file-progress {
+  height: 4px; background: var(--border);
+  border-radius: 2px; margin-top: 0.5rem; overflow: hidden;
+}
+.file-progress-fill {
+  height: 100%; background: var(--accent2);
+  border-radius: 2px; transition: width 0.4s;
+}
+.file-progress-fill.done { background: var(--green); }
+
+.file-actions { display: flex; gap: 0.4rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.file-btn {
+  padding: 0.3rem 0.8rem; border-radius: 6px;
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--muted); transition: all 0.15s; font-family: inherit;
+}
+.file-btn:hover { border-color: var(--accent); color: var(--accent); }
+.file-btn.download { background: var(--green); color: white; border-color: var(--green); }
+.file-btn.download:hover { background: #145228; }
+.file-btn.remove { border-color: #F0AAAA; color: var(--red); }
+.file-btn.remove:hover { background: var(--red-bg); }
+.file-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* TRANSLATED PREVIEW */
+.translation-preview {
+  background: var(--green-bg); border: 1px solid #A8D8B4;
+  border-radius: 8px; padding: 0.8rem 1rem;
+  font-family: 'Noto Serif Tamil', serif;
+  font-size: 1rem; line-height: 1.8; color: var(--text);
+  margin-top: 0.5rem; max-height: 120px; overflow-y: auto;
+  word-break: break-word;
+}
+
+/* BULK CONTROLS */
+.bulk-controls {
+  display: flex; gap: 0.8rem; flex-wrap: wrap;
+  align-items: center; margin-bottom: 1.5rem;
+  padding: 1rem 1.3rem; background: var(--surface2);
+  border-radius: var(--radius); border: 1.5px solid var(--border);
+}
+.bulk-progress-bar {
+  flex: 1; min-width: 160px;
+  height: 8px; background: var(--border);
+  border-radius: 4px; overflow: hidden;
+}
+.bulk-progress-fill {
+  height: 100%; background: var(--accent);
+  border-radius: 4px; transition: width 0.4s;
+}
+.bulk-count { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+
+/* OVERALL DOWNLOAD */
+.download-all {
+  background: var(--surface); border: 2px solid var(--green);
+  border-radius: var(--radius); padding: 1.2rem 1.5rem;
+  text-align: center; margin-top: 1rem; display: none;
+}
+.download-all.show { display: block; }
+.download-all h3 { color: var(--green); font-size: 1.1rem; margin-bottom: 0.5rem; }
+.download-all p { font-size: 0.88rem; color: var(--muted); margin-bottom: 0.8rem; }
+
+/* CHAR COUNT */
+.char-count { text-align: right; font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+.char-count.warn { color: var(--red); font-weight: 600; }
+
+/* COPY DONE */
+.copy-done { display: inline-block; background: var(--green); color: white; font-size: 0.78rem; padding: 0.15rem 0.6rem; border-radius: 5px; margin-left: 0.4rem; opacity: 0; transition: opacity 0.3s; }
+.copy-done.show { opacity: 1; }
+
+/* DOC CARDS */
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.doc-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 1.2rem; cursor: pointer; transition: all 0.15s; }
+.doc-card:hover { border-color: var(--accent2); box-shadow: var(--shadow); }
+.doc-card.selected { border-color: var(--accent); background: #FFF5EC; }
+.doc-card h3 { font-size: 1rem; color: var(--accent); margin-bottom: 0.3rem; }
+.doc-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+
+.doc-preview { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.2rem; box-shadow: var(--shadow); }
+.doc-preview h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 0.8rem; border-bottom: 1.5px solid var(--border); padding-bottom: 0.5rem; }
+.doc-section { margin-bottom: 1.2rem; }
+.doc-section h4 { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; }
+.doc-section .en-text { font-size: 0.95rem; background: var(--bg); border-radius: 7px; padding: 0.65rem 0.9rem; margin-bottom: 0.4rem; border: 1px solid var(--border); }
+.doc-section .ta-text { font-family: 'Noto Serif Tamil', serif; font-size: 1.1rem; color: var(--green); background: var(--green-bg); border-radius: 7px; padding: 0.65rem 0.9rem; border: 1px solid #A8D8B4; min-height: 2.2rem; }
+
+/* HISTORY */
+.history-item { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 0.8rem; }
+.history-item:hover { box-shadow: var(--shadow); }
+.history-item .en { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.3rem; }
+.history-item .ta { font-family: 'Noto Serif Tamil', serif; font-size: 1.1rem; color: var(--text); }
+.history-item .meta { font-size: 0.78rem; color: var(--border); margin-top: 0.3rem; }
+
+/* INFO BAR */
+.info-bar { background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 0.8rem 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.info-bar strong { color: var(--accent); }
+
+footer { background: var(--surface2); border-top: 1.5px solid var(--border); text-align: center; padding: 1.2rem; font-size: 0.82rem; color: var(--muted); }
+footer a { color: var(--accent); text-decoration: none; }
+
+@media (max-width: 600px) {
+  header { padding: 0.9rem 1rem; }
+  .main { padding: 1rem 0.7rem 3rem; }
+  .card { padding: 1rem; }
+  .btn { font-size: 0.9rem; padding: 0.65rem 1.2rem; }
+  .file-item { flex-wrap: wrap; }
+  .file-actions { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌺</div>
+  <div>
+    <h1>ஆங்கிலம் → தமிழ் மொழிபெயர்ப்பு</h1>
+    <p>English to Tamil Translator — Bulk Document Upload v2</p>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="info-bar">
+    <span>🆓 <strong>100% Free</strong></span>
+    <span>📄 <strong>Supports:</strong> PDF · DOCX · DOC · TXT</span>
+    <span>📦 <strong>Bulk upload</strong> multiple files at once</span>
+    <span>🌐 <strong>MyMemory API</strong> — No key needed</span>
+  </div>
+
+  <div class="font-controls">
+    <span>📝 Size:</span>
+    <button class="font-btn" onclick="setFont(16)">A</button>
+    <button class="font-btn active" onclick="setFont(18)">A+</button>
+    <button class="font-btn" onclick="setFont(22)">A++</button>
+    <button class="font-btn" onclick="setFont(26)">A+++</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" onclick="showTab('translate',this)">✏️ Translate Text</button>
+    <button class="tab active" onclick="showTab('bulk',this)">📦 Bulk File Upload</button>
+    <button class="tab" onclick="showTab('documents',this)">📋 Common Documents</button>
+    <button class="tab" onclick="showTab('history',this)">🕘 History</button>
+  </div>
+
+  <!-- ===== TAB: TRANSLATE TEXT ===== -->
+  <div class="panel" id="panel-translate">
+    <div class="tip-box"><span class="tip-icon">💡</span><div>Type or paste English text below, then press <strong>Translate</strong>.</div></div>
+    <div class="card">
+      <label>🇬🇧 English Text:</label>
+      <textarea id="inputText" maxlength="4500" placeholder="Type your English text here..." oninput="updateCharCount()"></textarea>
+      <div class="char-count" id="charCount">0 / 4500</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="translateText()" id="translateBtn">🔁 Translate to Tamil</button>
+        <button class="btn btn-outline" onclick="clearAll()">🗑️ Clear</button>
+        <button class="btn btn-outline" onclick="speakEn()">🔊 Hear English</button>
+      </div>
+      <div class="spinner" id="spinner"><div class="spin-circle"></div><span>Translating...</span></div>
+      <div class="error-box" id="errorBox"></div>
+      <div class="result-box" id="resultBox">
+        <div class="result-label">🇮🇳 Tamil Translation <span class="copy-done" id="copyDone">✓ Copied!</span></div>
+        <div class="result-text" id="resultText"></div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="copyResult()">📋 Copy</button>
+          <button class="btn btn-outline" onclick="speakTa()">🔊 Hear Tamil</button>
+          <button class="btn btn-outline" onclick="saveHistory()">💾 Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: BULK UPLOAD ===== -->
+  <div class="panel active" id="panel-bulk">
+
+    <div class="tip-box">
+      <span class="tip-icon">📦</span>
+      <div>
+        <strong>Bulk Upload:</strong> Select multiple PDF, Word (.docx/.doc), or text files at once. Each file's text will be extracted and translated to Tamil automatically. You can download each translation individually or all at once.
+      </div>
+    </div>
+
+    <!-- DROP ZONE -->
+    <div class="drop-zone" id="dropZone"
+         onclick="document.getElementById('bulkFileInput').click()"
+         ondragover="event.preventDefault();this.classList.add('drag')"
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleBulkDrop(event)">
+      <div class="dz-icon">📂</div>
+      <h3>Click here or drag & drop your files</h3>
+      <p>Select multiple files at once — all will be processed</p>
+      <div class="type-badges">
+        <span class="type-badge badge-pdf">📕 .pdf</span>
+        <span class="type-badge badge-docx">📘 .docx</span>
+        <span class="type-badge badge-doc">📗 .doc</span>
+        <span class="type-badge badge-txt">📄 .txt</span>
+      </div>
+    </div>
+    <input type="file" id="bulkFileInput" multiple
+           accept=".pdf,.doc,.docx,.txt,.text"
+           onchange="handleBulkFiles(event)">
+
+    <!-- QUEUE CONTROLS -->
+    <div class="bulk-controls" id="bulkControls" style="display:none;">
+      <button class="btn btn-primary" onclick="startBulkTranslation()" id="bulkStartBtn">🔁 Translate All Files</button>
+      <button class="btn btn-outline" onclick="addMoreFiles()">➕ Add More Files</button>
+      <button class="btn btn-outline" onclick="clearQueue()" style="color:var(--red);border-color:#F0AAAA;">🗑️ Clear All</button>
+      <div class="bulk-progress-bar"><div class="bulk-progress-fill" id="bulkProgressFill" style="width:0%"></div></div>
+      <span class="bulk-count" id="bulkCount">0 files</span>
+    </div>
+
+    <!-- FILE QUEUE LIST -->
+    <div class="file-queue" id="fileQueue"></div>
+
+    <!-- DOWNLOAD ALL -->
+    <div class="download-all" id="downloadAllBox">
+      <h3>✅ All files translated!</h3>
+      <p>Download all Tamil translations as a single combined text file, or download each file individually above.</p>
+      <button class="btn btn-green" onclick="downloadAll()">⬇️ Download All Translations (.txt)</button>
+    </div>
+
+  </div>
+
+  <!-- ===== TAB: COMMON DOCUMENTS ===== -->
+  <div class="panel" id="panel-documents">
+    <div class="tip-box"><span class="tip-icon">📋</span><div>Select a document type. All sections will be translated automatically.</div></div>
+    <div class="doc-grid">
+      <div class="doc-card" onclick="selectDoc('medical')" id="doc-medical"><h3>🏥 Medical Instructions</h3><p>Prescription, dosage, appointment notices</p></div>
+      <div class="doc-card" onclick="selectDoc('bank')" id="doc-bank"><h3>🏦 Bank Notices</h3><p>KYC, ATM safety, account statements</p></div>
+      <div class="doc-card" onclick="selectDoc('govt')" id="doc-govt"><h3>🏛️ Government Letters</h3><p>Ration card, pension, electricity bill</p></div>
+      <div class="doc-card" onclick="selectDoc('general')" id="doc-general"><h3>📬 General Letters</h3><p>Greetings, emergency, everyday phrases</p></div>
+    </div>
+    <div id="docPreviewArea"></div>
+    <div id="docTranslateBtn" style="display:none;margin-top:1rem;">
+      <button class="btn btn-primary" onclick="translateDocument()">🔁 Translate All Sections</button>
+    </div>
+  </div>
+
+  <!-- ===== TAB: HISTORY ===== -->
+  <div class="panel" id="panel-history">
+    <div class="tip-box"><span class="tip-icon">🕘</span><div>Your saved translations appear here. Stored only in this browser session.</div></div>
+    <div id="historyContainer"><p style="color:var(--muted);text-align:center;padding:2rem;">No translations saved yet.</p></div>
+    <button class="btn btn-outline" onclick="clearHistory()" style="margin-top:1rem;color:var(--red);">🗑️ Clear History</button>
+  </div>
+
+</div>
+
+<footer>
+  Powered by <a href="https://mymemory.translated.net/" target="_blank">MyMemory Free API</a> · PDF.js · Mammoth.js · All Open Source · Free Forever
+</footer>
+
+<script>
+// ==================== SETUP ====================
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const API = 'https://api.mymemory.translated.net/get';
+let historyArr = [];
+let fileQueue = []; // [{id, file, name, size, type, status, extractedText, translatedText, error}]
+let isTranslating = false;
+
+// ==================== TABS ====================
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+// ==================== FONT SIZE ====================
+function setFont(size) {
+  document.body.style.fontSize = size + 'px';
+  document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ==================== SIMPLE TRANSLATE TAB ====================
+async function translateText() {
+  const text = document.getElementById('inputText').value.trim();
+  if (!text) { showErr('errorBox', 'Please type some text first!'); return; }
+  document.getElementById('spinner').classList.add('show');
+  document.getElementById('translateBtn').disabled = true;
+  document.getElementById('resultBox').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+  try {
+    const r = await callAPI(text);
+    document.getElementById('resultText').textContent = r;
+    document.getElementById('resultBox').classList.add('show');
+  } catch(e) { showErr('errorBox', e.message); }
+  finally {
+    document.getElementById('spinner').classList.remove('show');
+    document.getElementById('translateBtn').disabled = false;
+  }
+}
+function clearAll() {
+  document.getElementById('inputText').value = '';
+  updateCharCount();
+  document.getElementById('resultBox').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+}
+function updateCharCount() {
+  const l = document.getElementById('inputText').value.length;
+  const el = document.getElementById('charCount');
+  el.textContent = l + ' / 4500';
+  el.classList.toggle('warn', l > 4000);
+}
+function copyResult() {
+  navigator.clipboard.writeText(document.getElementById('resultText').textContent);
+  const el = document.getElementById('copyDone');
+  el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000);
+}
+function speakEn() { speak(document.getElementById('inputText').value, 'en-US'); }
+function speakTa() { speak(document.getElementById('resultText').textContent, 'ta-IN'); }
+function speak(text, lang) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+function saveHistory() {
+  const en = document.getElementById('inputText').value.trim();
+  const ta = document.getElementById('resultText').textContent;
+  if (!en || !ta) return;
+  historyArr.unshift({ en, ta, time: new Date().toLocaleString() });
+  if (historyArr.length > 30) historyArr.pop();
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠️ ' + msg; el.classList.add('show');
+}
+
+// ==================== API CALL ====================
+async function callAPI(text) {
+  const url = `${API}?q=${encodeURIComponent(text.substring(0, 4500))}&langpair=en|ta`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Network error. Check your internet connection.');
+  const data = await res.json();
+  if (data.responseStatus !== 200) throw new Error('Translation failed. Try again.');
+  return data.responseData.translatedText;
+}
+
+async function translateInChunks(text) {
+  const sentences = text.replace(/\r\n/g, '\n').split(/(?<=[.!?\n])\s+/);
+  const chunks = [];
+  let cur = '';
+  for (const s of sentences) {
+    if ((cur + ' ' + s).length > 4000) {
+      if (cur.trim()) chunks.push(cur.trim());
+      cur = s;
+    } else { cur = cur ? cur + ' ' + s : s; }
+  }
+  if (cur.trim()) chunks.push(cur.trim());
+  if (!chunks.length) chunks.push(text.substring(0, 4000));
+
+  const results = [];
+  for (const chunk of chunks) {
+    const r = await callAPI(chunk);
+    results.push(r);
+    await sleep(600);
+  }
+  return results.join('\n\n');
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ==================== FILE EXTRACTION ====================
+async function extractText(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.txt') || name.endsWith('.text')) {
+    return await readAsText(file);
+  }
+  if (name.endsWith('.pdf')) {
+    return await extractFromPDF(file);
+  }
+  if (name.endsWith('.docx')) {
+    return await extractFromDOCX(file);
+  }
+  if (name.endsWith('.doc')) {
+    // .doc (old binary format) — try as text, fallback message
+    try {
+      const text = await readAsText(file);
+      // If mostly non-printable, it's binary DOC
+      const printable = text.replace(/[^\x20-\x7E\n\r\t]/g, '').trim();
+      if (printable.length < 50) throw new Error('Binary DOC');
+      return printable;
+    } catch {
+      throw new Error('.doc (old Word 97 format) cannot be read directly in the browser. Please save it as .docx in Microsoft Word first, then re-upload.');
+    }
+  }
+  throw new Error('Unsupported file type: ' + file.name);
+}
+
+function readAsText(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = () => rej(new Error('Could not read file'));
+    r.readAsText(file, 'UTF-8');
+  });
+}
+
+async function extractFromPDF(file) {
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    fullText += pageText + '\n';
+  }
+  if (!fullText.trim()) throw new Error('No text found in PDF. It may be a scanned image PDF — please use a text-based PDF.');
+  return fullText.trim();
+}
+
+async function extractFromDOCX(file) {
+  const ab = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer: ab });
+  if (!result.value.trim()) throw new Error('No text found in this DOCX file.');
+  return result.value.trim();
+}
+
+// ==================== BULK UPLOAD ====================
+function handleBulkFiles(event) {
+  addFiles(Array.from(event.target.files));
+  event.target.value = '';
+}
+function handleBulkDrop(event) {
+  event.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  addFiles(Array.from(event.dataTransfer.files));
+}
+function addMoreFiles() { document.getElementById('bulkFileInput').click(); }
+
+function addFiles(files) {
+  const allowed = ['.pdf', '.docx', '.doc', '.txt', '.text'];
+  files.forEach(f => {
+    const ext = '.' + f.name.split('.').pop().toLowerCase();
+    if (!allowed.includes(ext)) { alert('Skipped: ' + f.name + ' (unsupported type)'); return; }
+    const id = 'f' + Date.now() + Math.random().toString(36).slice(2);
+    fileQueue.push({ id, file: f, name: f.name, size: f.size, type: ext, status: 'pending', extractedText: '', translatedText: '', error: '' });
+  });
+  renderQueue();
+  document.getElementById('bulkControls').style.display = fileQueue.length ? 'flex' : 'none';
+  document.getElementById('downloadAllBox').classList.remove('show');
+}
+
+function clearQueue() {
+  fileQueue = [];
+  renderQueue();
+  document.getElementById('bulkControls').style.display = 'none';
+  document.getElementById('downloadAllBox').classList.remove('show');
+}
+
+function removeFile(id) {
+  fileQueue = fileQueue.filter(f => f.id !== id);
+  renderQueue();
+  updateBulkProgress();
+  if (!fileQueue.length) {
+    document.getElementById('bulkControls').style.display = 'none';
+    document.getElementById('downloadAllBox').classList.remove('show');
+  }
+}
+
+function renderQueue() {
+  const container = document.getElementById('fileQueue');
+  if (!fileQueue.length) { container.innerHTML = ''; return; }
+
+  const done = fileQueue.filter(f => f.status === 'done').length;
+  document.getElementById('bulkCount').textContent = `${done}/${fileQueue.length} done`;
+
+  container.innerHTML = `
+    <div class="file-queue-header">
+      <h3>📋 File Queue (${fileQueue.length} file${fileQueue.length > 1 ? 's' : ''})</h3>
+      <span class="queue-stats">${done} translated</span>
+    </div>
+    ${fileQueue.map(f => renderFileItem(f)).join('')}
+  `;
+}
+
+function renderFileItem(f) {
+  const icon = { '.pdf': '📕', '.docx': '📘', '.doc': '📗', '.txt': '📄', '.text': '📄' }[f.type] || '📄';
+  const sizeStr = f.size < 1024 ? f.size + ' B' : f.size < 1024*1024 ? (f.size/1024).toFixed(1) + ' KB' : (f.size/1024/1024).toFixed(1) + ' MB';
+  const statusLabel = { pending: '', extracting: '⏳ Extracting text...', translating: '🔄 Translating to Tamil...', done: '✅ Translation complete!', error: '❌ ' + f.error }[f.status];
+  const statusClass = f.status;
+  const itemClass = ['processing', 'translating'].includes(f.status) ? 'processing' : f.status === 'done' ? 'done' : f.status === 'error' ? 'error' : '';
+  const progress = f.status === 'done' ? 100 : f.status === 'translating' ? 70 : f.status === 'extracting' ? 30 : 0;
+  const progressDone = f.status === 'done' ? 'done' : '';
+
+  return `<div class="file-item ${itemClass}" id="item-${f.id}">
+    <div class="file-icon">${icon}</div>
+    <div class="file-info">
+      <div class="file-name">${escHtml(f.name)}</div>
+      <div class="file-meta">${sizeStr} · ${f.type.replace('.','').toUpperCase()}</div>
+      ${statusLabel ? `<div class="file-status ${statusClass}">${statusLabel}</div>` : ''}
+      ${progress > 0 ? `<div class="file-progress"><div class="file-progress-fill ${progressDone}" style="width:${progress}%"></div></div>` : ''}
+      ${f.status === 'done' && f.translatedText ? `<div class="translation-preview">${escHtml(f.translatedText.substring(0, 300))}${f.translatedText.length > 300 ? '...' : ''}</div>` : ''}
+    </div>
+    <div class="file-actions">
+      ${f.status === 'done' ? `<button class="file-btn download" onclick="downloadFile('${f.id}')">⬇️ Download</button>` : ''}
+      ${f.status === 'done' ? `<button class="file-btn" onclick="copyFileTranslation('${f.id}')">📋 Copy</button>` : ''}
+      ${f.status === 'error' ? `<button class="file-btn" onclick="retryFile('${f.id}')">🔄 Retry</button>` : ''}
+      ${f.status !== 'extracting' && f.status !== 'translating' ? `<button class="file-btn remove" onclick="removeFile('${f.id}')">✕</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function updateFileItem(id) {
+  const f = fileQueue.find(f => f.id === id);
+  if (!f) return;
+  const el = document.getElementById('item-' + id);
+  if (el) el.outerHTML = renderFileItem(f);
+}
+
+function updateBulkProgress() {
+  const done = fileQueue.filter(f => f.status === 'done').length;
+  const total = fileQueue.length;
+  document.getElementById('bulkProgressFill').style.width = total ? (done/total*100) + '%' : '0%';
+  document.getElementById('bulkCount').textContent = `${done}/${total} done`;
+  if (total > 0 && done === total) {
+    document.getElementById('downloadAllBox').classList.add('show');
+  }
+}
+
+async function startBulkTranslation() {
+  if (isTranslating) return;
+  isTranslating = true;
+  const btn = document.getElementById('bulkStartBtn');
+  btn.disabled = true; btn.textContent = '⏳ Processing...';
+
+  const pending = fileQueue.filter(f => f.status === 'pending' || f.status === 'error');
+
+  for (const f of pending) {
+    // EXTRACT
+    f.status = 'extracting'; updateFileItem(f.id);
+    try {
+      f.extractedText = await extractText(f.file);
+    } catch (e) {
+      f.status = 'error'; f.error = e.message; updateFileItem(f.id); updateBulkProgress(); continue;
+    }
+
+    // TRANSLATE
+    f.status = 'translating'; updateFileItem(f.id);
+    try {
+      f.translatedText = await translateInChunks(f.extractedText);
+      f.status = 'done';
+    } catch (e) {
+      f.status = 'error'; f.error = 'Translation failed: ' + e.message;
+    }
+    updateFileItem(f.id);
+    updateBulkProgress();
+    await sleep(400);
+  }
+
+  isTranslating = false;
+  btn.disabled = false; btn.textContent = '🔁 Translate All Files';
+  renderQueue();
+  updateBulkProgress();
+}
+
+async function retryFile(id) {
+  const f = fileQueue.find(f => f.id === id);
+  if (!f) return;
+  f.status = 'pending'; f.error = ''; f.extractedText = ''; f.translatedText = '';
+  updateFileItem(f.id);
+  if (!isTranslating) startBulkTranslation();
+}
+
+function downloadFile(id) {
+  const f = fileQueue.find(f => f.id === id);
+  if (!f || !f.translatedText) return;
+  const baseName = f.name.replace(/\.[^.]+$/, '');
+  const blob = new Blob([`Tamil Translation of: ${f.name}\n${'='.repeat(50)}\n\n${f.translatedText}`], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = baseName + '_tamil.txt';
+  a.click();
+}
+
+function copyFileTranslation(id) {
+  const f = fileQueue.find(f => f.id === id);
+  if (!f) return;
+  navigator.clipboard.writeText(f.translatedText);
+}
+
+function downloadAll() {
+  const done = fileQueue.filter(f => f.status === 'done');
+  if (!done.length) return;
+  let content = 'TAMIL TRANSLATIONS\n' + '='.repeat(60) + '\n\n';
+  done.forEach(f => {
+    content += `FILE: ${f.name}\n${'-'.repeat(50)}\n${f.translatedText}\n\n${'='.repeat(60)}\n\n`;
+  });
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'all_tamil_translations.txt';
+  a.click();
+}
+
+// ==================== COMMON DOCUMENTS ====================
+const DOCS = {
+  medical: { title: '🏥 Medical Instructions', sections: [
+    { key: 'dosage', label: 'Dosage Instructions', en: 'Take one tablet twice a day after meals. Do not take on an empty stomach. If you feel dizzy, stop the medication and contact your doctor immediately.' },
+    { key: 'appt', label: 'Appointment Notice', en: 'Your appointment has been scheduled for Monday at 10:30 AM at the General Hospital, 2nd floor, Room 204. Please bring your previous medical records and Aadhaar card.' },
+    { key: 'diet', label: 'Diet & Precautions', en: 'Avoid spicy and oily food. Drink at least 8 glasses of water every day. Do not consume alcohol or tobacco.' }
+  ]},
+  bank: { title: '🏦 Bank Notices', sections: [
+    { key: 'kyc', label: 'KYC Update', en: 'Your KYC documents need to be updated before the 30th of this month. Please visit your nearest branch with your Aadhaar card, PAN card, and a passport size photograph.' },
+    { key: 'atm', label: 'ATM Safety', en: 'Never share your ATM PIN or OTP with anyone. If you receive a suspicious call, hang up and call our helpline.' },
+    { key: 'stmt', label: 'Account Statement', en: 'Your monthly account statement is ready. For any queries, please visit your home branch or call our 24/7 customer care.' }
+  ]},
+  govt: { title: '🏛️ Government Letters', sections: [
+    { key: 'ration', label: 'Ration Card Notice', en: 'Your ration card is due for renewal. Please visit the nearest Taluk office with your Aadhaar card, recent electricity bill, and two passport photos within 30 days.' },
+    { key: 'pension', label: 'Pension Notice', en: 'Your monthly pension has been credited to your registered bank account. Please complete your annual life certificate verification at your nearest post office.' },
+    { key: 'elect', label: 'Electricity Bill', en: 'Please pay your electricity bill before the due date to avoid late fees and disconnection of supply.' }
+  ]},
+  general: { title: '📬 General Letters', sections: [
+    { key: 'greet', label: 'Greetings', en: 'Good morning. How are you? I hope you and your family are doing well. Please take care of your health and eat nutritious food regularly.' },
+    { key: 'emerg', label: 'Emergency', en: 'This is very important. Please call the doctor immediately. There is an emergency. We are going to the hospital. Do not worry.' },
+    { key: 'help', label: 'Asking for Help', en: 'Excuse me, could you please help me? I am unable to read this document. Can you explain what is written here?' }
+  ]}
+};
+
+function selectDoc(type) {
+  document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('doc-' + type).classList.add('selected');
+  const doc = DOCS[type];
+  let html = `<div class="doc-preview"><h2>${doc.title}</h2>`;
+  doc.sections.forEach(s => {
+    html += `<div class="doc-section"><h4>${s.label}</h4><div class="en-text">${escHtml(s.en)}</div><div class="ta-text" id="ta-${s.key}">— Not yet translated —</div></div>`;
+  });
+  html += '</div>';
+  document.getElementById('docPreviewArea').innerHTML = html;
+  document.getElementById('docTranslateBtn').style.display = 'block';
+  window._currentDoc = doc;
+}
+
+async function translateDocument() {
+  if (!window._currentDoc) return;
+  const btn = document.querySelector('#docTranslateBtn button');
+  btn.disabled = true; btn.textContent = '⏳ Translating...';
+  for (const s of window._currentDoc.sections) {
+    const el = document.getElementById('ta-' + s.key);
+    el.textContent = '⏳...';
+    try { el.textContent = await callAPI(s.en); el.style.color = 'var(--green)'; }
+    catch { el.textContent = '⚠️ Failed.'; }
+    await sleep(600);
+  }
+  btn.disabled = false; btn.textContent = '✅ Done!';
+}
+
+// ==================== HISTORY ====================
+function renderHistory() {
+  const c = document.getElementById('historyContainer');
+  if (!historyArr.length) { c.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem;">No translations saved yet.</p>'; return; }
+  c.innerHTML = historyArr.map(h => `<div class="history-item"><div class="en">🇬🇧 ${escHtml(h.en.substring(0,120))}${h.en.length>120?'...':''}</div><div class="ta">🇮🇳 ${escHtml(h.ta.substring(0,200))}${h.ta.length>200?'...':''}</div><div class="meta">${h.time}</div></div>`).join('');
+}
+function clearHistory() { historyArr = []; renderHistory(); }
+
+function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>
